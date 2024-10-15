@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>25 + 5 Clock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #2F4F4F;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .timer-container {
+            max-width: 400px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        #time-left {
+            font-size: 48px;
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px solid white;
+            border-radius: 10px;
+        }
+        .btn-group {
+            margin-top: 20px;
+        }
+
+        .btn-custom {
+         background-color: #4CAF50; 
+         border: none; 
+         color: white;
+}
+        .btn-custom:hover {
+         background-color: rgba(255,255,255,0.1);
+        color: white;
+}
+        .description{
+            font-size: 8px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container timer-container">
+        <h1 id="heading" class="mb-4">25 + 5 Clock</h1>
+        <p id="description">Made by Lunga</p>
+        <div class="row mb-3">
+            <div class="col">
+                <h4 id="break-label">Break Length</h4>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-custom" id="break-decrement">-</button>
+                    <span class="btn btn-custom" id="break-length">5</span>
+                    <button type="button" class="btn btn-custom" id="break-increment">+</button>
+                </div>
+            </div>
+            <div class="col">
+                <h4 id="session-label">Session Length</h4>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-custom" id="session-decrement">-</button>
+                    <span class="btn btn-custom" id="session-length">25</span>
+                    <button type="button" class="btn btn-custom" id="session-increment">+</button>
+                </div>
+            </div>
+        </div>
+        <h3 id="timer-label">Session</h3>
+        <div id="time-left">25:00</div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-custom" id="start_stop">Start/Stop</button>
+            <button type="button" class="btn btn-custom" id="reset">Reset</button>
+        </div>
+        
+    </div>
+    <audio id="beep" preload="auto" src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"></audio>
+
+    <script>
+        let breakLength = 5;
+        let sessionLength = 25;
+        let timeLeft = sessionLength * 60;
+        let timerId;
+        let isSession = true;
+        let isPaused = true;
+
+        const breakLengthEl = document.getElementById('break-length');
+        const sessionLengthEl = document.getElementById('session-length');
+        const timerLabel = document.getElementById('timer-label');
+        const timeLeftEl = document.getElementById('time-left');
+        const startStopBtn = document.getElementById('start_stop');
+        const resetBtn = document.getElementById('reset');
+        const beep = document.getElementById('beep');
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timeLeftEl.textContent = formatTime(timeLeft);
+        }
+
+        function switchTimer() {
+            beep.play();
+            if (isSession) {
+                isSession = false;
+                timerLabel.textContent = 'Break';
+                timeLeft = parseInt(breakLengthEl.textContent) * 60;
+            } else {
+                isSession = true;
+                timerLabel.textContent = 'Session';
+                timeLeft = parseInt(sessionLengthEl.textContent) * 60;
+            }
+            updateDisplay();
+        }
+
+        function startTimer() {
+            if (isPaused) {
+                isPaused = false;
+                timerId = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        switchTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerId);
+            isPaused = true;
+        }
+
+        startStopBtn.addEventListener('click', () => {
+            if (isPaused) {
+                startTimer();
+            } else {
+                stopTimer();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            stopTimer();
+            breakLength = 5;
+            sessionLength = 25;
+            timeLeft = sessionLength * 60;
+            isSession = true;
+            breakLengthEl.textContent = breakLength;
+            sessionLengthEl.textContent = sessionLength;
+            timerLabel.textContent = 'Session';
+            updateDisplay();
+            beep.pause();
+            beep.currentTime = 0;
+        });
+
+        document.getElementById('break-decrement').addEventListener('click', () => {
+            if (breakLength > 1 && isPaused) {
+                breakLength--;
+                breakLengthEl.textContent = breakLength;
+                if (!isSession) {
+                    timeLeft = breakLength * 60;
+                    updateDisplay();
+                }
+            }
+        });
+
+        document.getElementById('break-increment').addEventListener('click', () => {
+            if (breakLength < 60 && isPaused) {
+                breakLength++;
+                breakLengthEl.textContent = breakLength;
+                if (!isSession) {
+                    timeLeft = breakLength * 60;
+                    updateDisplay();
+                }
+            }
+        });
+
+        document.getElementById('session-decrement').addEventListener('click', () => {
+            if (sessionLength > 1 && isPaused) {
+                sessionLength--;
+                sessionLengthEl.textContent = sessionLength;
+                if (isSession) {
+                    timeLeft = sessionLength * 60;
+                    updateDisplay();
+                }
+            }
+        });
+
+        document.getElementById('session-increment').addEventListener('click', () => {
+            if (sessionLength < 60 && isPaused) {
+                sessionLength++;
+                sessionLengthEl.textContent = sessionLength;
+                if (isSession) {
+                    timeLeft = sessionLength * 60;
+                    updateDisplay();
+                }
+            }
+        });
+
+        updateDisplay();
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</body>
+</html>
